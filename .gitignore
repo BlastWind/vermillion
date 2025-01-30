@@ -9,3 +9,4 @@
 *.cmo
 *.json
 *.eps
+.lia.cache

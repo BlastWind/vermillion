@@ -1,4 +1,4 @@
-Require Import FMaps List MSets Omega String Program.Wf Arith.Wf_nat.
+Require Import FMaps List MSets Lia String Program.Wf Arith.Wf_nat.
 Require Import Grammar.
 Require Import Lemmas.
 Require Import Tactics.
@@ -20,7 +20,7 @@ Module ParserFn (Import G : Grammar.T).
     | snd_lt : forall x y y' z z', ltB y y' -> triple_lex (x, y, z) (x, y', z')
     | thd_lt : forall x y z z', ltC z z' -> triple_lex (x, y, z) (x, y, z').
     
-    Hint Constructors triple_lex.
+    Hint Constructors triple_lex : core.
     
     Theorem triple_lex_trans :
       transitive _ ltA -> transitive _ ltB -> transitive _ ltC -> transitive _ triple_lex.
@@ -154,7 +154,7 @@ Module ParserFn (Import G : Grammar.T).
   Proof.
     intros.
     eapply Acc_inv; eauto.
-    apply thd_lt; simpl; omega.
+    apply thd_lt; simpl; lia.
   Defined.
   
   Lemma hole3 :
@@ -176,7 +176,7 @@ Module ParserFn (Import G : Grammar.T).
   Proof.
     intros.
     eapply Acc_inv; eauto.
-    apply thd_lt; subst; simpl; omega.
+    apply thd_lt; subst; simpl; lia.
   Defined.
   
   Open Scope list_scope.
@@ -228,7 +228,7 @@ Module ParserFn (Import G : Grammar.T).
   Proof.
     intros A xs ys zs H H'; unfold length_lt_eq in *;
       destruct H; destruct H'; subst; auto.
-    left; omega.
+    left; lia.
   Defined.
 
   Definition mismatchMessage (a a' : terminal) : string :=
