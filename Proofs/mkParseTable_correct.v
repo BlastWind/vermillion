@@ -16,6 +16,8 @@ Module GeneratorProofsFn (Import G : Grammar.T).
       pt_lookup x la tbl = Some p
       <-> x = (lhs p) /\ In (p, la) es.
 
+  (* Shows that if a parse table is correct with respect to entries, and those entries are correct with respect to a grammar, 
+     then the parse table is correct with respect to that grammar *)
   Lemma invariant_iff_parse_table_correct :
     forall (g : grammar) (es : list table_entry) (tbl : parse_table),
       entries_correct es g
@@ -52,7 +54,8 @@ Module GeneratorProofsFn (Import G : Grammar.T).
 
   (* mkParseTable soundness *)
 
-    Lemma addEntry_outer_right_inner_right :
+  (* Proves that if addEntry returns a right value, its input must have been a right value *)
+  Lemma addEntry_outer_right_inner_right :
     forall e s tbl,
       addEntry e s = inr tbl
       -> exists tbl',
@@ -64,6 +67,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
     inv Hadd; eauto.
   Qed.
 
+  (* Shows that adding a duplicate entry preserves the table correctness invariant *)
   Lemma duplicate_preserves_invariant :
     forall tbl es x la p,
       table_correct_wrt_entries tbl es
@@ -87,6 +91,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
       + apply Htc; auto.
   Qed.
 
+  (* Proves that looking up an entry in a table after adding a new entry either returns the new entry or an existing one *)
   Lemma lookup_add_or :
     forall x x' la la' p p' tbl,
       pt_lookup x' la' (pt_add x la p tbl) = Some p'
@@ -100,6 +105,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
     inv e; inv Hlk; auto.
   Qed.
 
+  (* Shows that adding a new entry preserves the table correctness invariant *)
   Lemma new_entry_preserves_invariant :
     forall tbl es p la,
       table_correct_wrt_entries tbl es
@@ -212,6 +218,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
           (p := existT _ (x, gamma) f); auto.
   Qed.
 
+  (* Proves that an empty parse table is correct with respect to empty entries *)
   Lemma empty_table_correct_wrt_empty_entries :
     table_correct_wrt_entries empty_table [].
   Proof.
@@ -224,6 +231,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
     - intros [Heq Hin]; inv Hin.
   Qed.
 
+  (* Shows that unique action per production property is preserved when removing the head entry *)
   Lemma unique_action_per_prod_tl :
     forall e es,
       unique_action_per_prod (e :: es)
@@ -235,6 +243,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
     eapply Hu; right; eauto.
   Qed.
 
+  (* Main soundness theorem for mkParseTable with respect to the invariant *)
   Lemma mkParseTable_sound_wrt_invariant :
     forall (es  : list table_entry)
            (tbl : parse_table),
@@ -254,6 +263,7 @@ Module GeneratorProofsFn (Import G : Grammar.T).
       eapply addEntry_preserves_invariant; eauto.
   Qed.
 
+  (* Main soundness theorem for mkParseTable *)
   Lemma mkParseTable_sound :
     forall (es  : list table_entry)
            (g   : grammar)

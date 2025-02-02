@@ -15,6 +15,8 @@ Module GeneratorFn (Export G : Grammar.T).
   Definition lhSet (ps : list production) : NtSet.t :=
     fromNtList (map lhs ps).
   
+
+  (* Implementation of nullableGamma *)
   Fixpoint nullableGamma (gamma : list symbol) (nu : NtSet.t) : bool :=
     match gamma with 
     | [] => true

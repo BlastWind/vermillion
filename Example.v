@@ -1,6 +1,7 @@
 Require Import String.
 Require Import Grammar.
 Require Import Main.
+Require Import Generator.
 Open Scope string_scope.
 
 (* This file gives an example of how to use Vermillion.
@@ -94,6 +95,10 @@ Module Export G <: Grammar.T.
   Module Export SymTy := G311_Types.
   Module Export Defs  := DefsFn SymTy.
 End G.
+
+(* Now we can instantiate the generator with our grammar module *)
+Module Export Gen := GeneratorFn G.
+
 
 (* Now we can represent the grammar from the textbook
    as a record with "start" and "prods" fields. *)
@@ -254,4 +259,29 @@ Compute (match parseTableOf non_LL1_grammar with
          | inl msg => inl msg
          | inr tbl => inr (parse tbl (NT S) example_prog)
          end).
+
+
+(**
+    Inductive nullable_sym (g : grammar) : symbol -> Prop :=
+    | NullableSym : forall x ys f,
+        In (existT _ (x, ys) f) g.(prods)
+        -> nullable_gamma g  
+        -> nullable_sym g (NT x)
+(* Note, this means, if we want to write an empty production, we need to explicitly state it as going to empty set [] *)
+(* Specification of nullable_grammar *)
+    with nullable_gamma (g : grammar) : list symbol -> Prop :=
+         | NullableNil  : nullable_gamma g [] (* rhs is blank, that's empty *)
+         | NullableCons : forall hd: symbol tl: [symbol],
+             nullable_sym g hd
+             -> nullable_gamma g tl
+             -> nullable_gamma g (hd :: tl).
+**)
+
+Print nullable_gamma.
+
+Theorem terminals_are_not_nullable : forall (g: grammar) (t: terminal), ~ nullable_sym g (T t).
+Proof. unfold not. intros. inversion H. Qed.
+
+
+
 

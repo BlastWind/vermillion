@@ -15,7 +15,7 @@ Module Make (Import G : Grammar.T).
     match findDup _ base_production_eq_dec (baseProductions g) with
     | Some b => inl (dupMessage b)
     | None   => 
-      let nu    := mkNullableSet g in
+    let nu    := mkNullableSet g in
       let nu_pf := mkNullableSet_correct g in
       let fi    := mkFirstMap g nu in
       let fi_pf := mkFirstMap_correct g nu nu_pf in
@@ -80,6 +80,7 @@ Module Make (Import G : Grammar.T).
       -> sym_derives_prefix g s w v r.
   Proof.
     intros g tbl s w r v Ht Hp.
+    destruct Ht.
     unfold parse in Hp.
     step_eq Hp'; tc.
     dms; invh.

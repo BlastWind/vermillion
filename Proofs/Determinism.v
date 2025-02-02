@@ -17,6 +17,7 @@ Module DetFn (Import G : Grammar.T).
            (w w' r r' : list token)
            (v v'      : symbol_semty s),
       parse_table_correct tbl g
+      (* If the concats of tokens equal *)
       -> w ++ r = w' ++ r'
       -> sym_derives_prefix g s w  v  r
       -> sym_derives_prefix g s w' v' r'

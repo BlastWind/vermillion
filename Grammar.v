@@ -126,11 +126,14 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
       | EOF  => "EOF"
       end.
 
+(* Specification of nullable_sym *)
     Inductive nullable_sym (g : grammar) : symbol -> Prop :=
+    (* The sym constructor allows us to choose one gamma to examine! *)
     | NullableSym : forall x ys f,
         In (existT _ (x, ys) f) g.(prods)
         -> nullable_gamma g ys
         -> nullable_sym g (NT x)
+    (* The gamma constructor breaks up the list of symbols: It goes on to *)
     with nullable_gamma (g : grammar) : list symbol -> Prop :=
          | NullableNil  : nullable_gamma g []
          | NullableCons : forall hd tl,
@@ -145,17 +148,24 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
 
     Inductive first_sym (g : grammar) :
       lookahead -> symbol -> Prop :=
+    (* Given terminal t, FIRST(t) = {t} *)
     | FirstT : forall y,
         first_sym g (LA y) (T y)
+    (* Given nonterminal nt, we enlist a token `la` into FIRST(nt)
+       if it is in FIRST(s) for some s that is the first nonnullable symbol of some PROD(nt),
+    *)
     | FirstNT : forall x gpre s gsuf f la,
         In (existT _ (x, gpre ++ s :: gsuf) f) g.(prods)
-        -> nullable_gamma g gpre
+        -> nullable_gamma g gpre (*  *)
         -> first_sym g la s
         -> first_sym g la (NT x).
     
     Hint Constructors first_sym : core.
 
     Inductive first_gamma (g : grammar) : lookahead -> list symbol -> Prop :=
+    (* Given that `a` is in FIRST(nt), `a` is also the first token of any list of symbols
+       `...nt`, where `...` is  nullable.
+    *)
     | FirstGamma : forall gpre la s gsuf,
         nullable_gamma g gpre
         -> first_sym g la s
@@ -164,13 +174,17 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
     Hint Constructors first_gamma : core.
 
     Inductive follow_sym (g : grammar) : lookahead -> symbol -> Prop :=
+    (* Base case: `EOF` follows the starting symbol *)
     | FollowStart : forall x,
         x = g.(start)
         -> follow_sym g EOF (NT x)
+    (* Given symbols `...AB...`, symbol `b` in FIRST(B) follows `A` *)
     | FollowRight : forall x1 x2 la gpre gsuf f,
         In (existT _ (x1, gpre ++ NT x2 :: gsuf) f) g.(prods)
         -> first_gamma g la gsuf
         -> follow_sym g la (NT x2)
+    (* Given production `A -> ...BC`, if `C` is nullable, then a symbol following A
+    also follows B *)
     | FollowLeft : forall x1 x2 la gpre gsuf f,
         In (existT _ (x1, gpre ++ NT x2 :: gsuf) f) g.(prods)
         -> nullable_gamma g gsuf
@@ -179,7 +193,10 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
 
     Hint Constructors follow_sym : core.
 
-    (* "la is a lookahead token for production X -> gamma" *)
+    (* "la is a lookahead token for production X -> gamma" if
+    1) We can inductively build `la` as the first symbol of the gamma
+    2) `gamma` is nullable, but `la` follows `X`.
+    *)
     Definition lookahead_for
                (la : lookahead)
                (x : nonterminal)
@@ -262,6 +279,13 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
       | (existT _ a _) :: _ => LA a
       end.
 
+    (* 
+      Specification of what is "valid" in our grammar:
+      If an input is "valid", there exists a derivation according to [sym_derives_prefix]  
+    *)
+    (* 
+      Can symbol `s` derive `w` from the string `w ++ r`? 
+    *)
     Inductive sym_derives_prefix (g : grammar) :
       forall (s : symbol)
              (w : list token)
@@ -270,28 +294,43 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
     | T_sdp  : forall (a : terminal)
                       (v : t_semty a)
                       (r : list token),
+          (* A terminal can derive an element of the corresponding type (determined with t_semty), *)
           sym_derives_prefix g (T a) [existT _ a v] v r
     | NT_sdp : forall (x     : nonterminal) 
                       (gamma : list symbol)
                       (w r   : list token) 
                       (vs    : rhs_semty gamma)
                       (f     : action_ty (x, gamma)),
-        In (existT _ (x, gamma) f) g.(prods)
+        (* A nonterminal can derive a sequence of tokens if:
+           1) There exists a production rule for this nonterminal in the grammar
+           2) The next token in the input stream is a valid lookahead for this production
+           3) The right-hand side of the production (gamma) can derive the token sequence
+           The semantic value is computed by applying the production's action to the derived values *)
+        In (existT _ (x, gamma) f) g.(prods) (* Multiple productions allowed *)
         -> lookahead_for (peek (w ++ r)) x gamma g
         -> gamma_derives_prefix g gamma w vs r
         -> sym_derives_prefix g (NT x) w (f vs) r
+    (* sym_derives_prefix and gamma_derives_prefix work together to define valid derivations:
+       - sym_derives_prefix handles individual symbols (terminals and nonterminals)
+       - gamma_derives_prefix handles sequences of symbols, breaking them down one at a time,
+       The mutual recursion allows us to handle arbitrary production rules in the grammar *)
     with gamma_derives_prefix (g : grammar) :
            forall (gamma : list symbol)
                   (w     : list token)
                   (vs    : rhs_semty gamma)
                   (r     : list token), Prop :=
          | Nil_gdp : forall r,
+             (* An empty sequence of symbols derives an empty sequence of tokens *)
              gamma_derives_prefix g [] [] tt r
          | Cons_gdp : forall (s           : symbol)
                              (wpre wsuf r : list token)
                              (v           : symbol_semty s)
                              (ss          : list symbol)
                              (vs          : rhs_semty ss),
+             (* A sequence of symbols derives a token sequence if:
+                1) The first symbol derives some prefix of tokens
+                2) The rest of the symbols derive the remaining tokens
+                The semantic values are paired together as we go *)
              sym_derives_prefix g s wpre v (wsuf ++ r)
              -> gamma_derives_prefix g ss wsuf vs r
              -> gamma_derives_prefix g (s :: ss) (wpre ++ wsuf) (v, vs) r.
@@ -369,6 +408,8 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
   End Formatting.
 
   (* Definitions related to correctness specs *)
+  (* Soundnes means that being in the implementationally constructed struct -> inductively defined *)
+  (* Complete means that being inducitvely defined -> in the implementationally constructed struct*)
   Module Export Specs.
 
     Definition nullable_set_sound (nu : NtSet.t) (g  : grammar) : Prop :=
@@ -430,11 +471,18 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
            /\ List.In (existT _ (x, gamma) f) g.(prods)
            /\ lookahead_for la x gamma g.
     
+    (*
+    For a parsing table to be complete:
+    If a (nt, gamma) pair is a production and 
+    there is a lookahead la for it (calculated by using the inductive first)
+    then looking up the (nt, la) should give us the production
+    *)
     Definition pt_complete (tbl : parse_table) (g : grammar) : Prop :=
       forall (x     : nonterminal)
              (la    : lookahead)
              (gamma : list symbol)
              (f     : action_ty (x, gamma)),
+
         List.In (existT _ (x, gamma) f) g.(prods)
         -> lookahead_for la x gamma g
         -> pt_lookup x la tbl = Some (existT _ (x, gamma) f).
