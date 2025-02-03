@@ -2,7 +2,7 @@
 
 ## LL(1) parser generator verified in Coq
 
-This project has been tested with Coq version 8.8.1.
+This project has been tested with Coq version 8.19.2.
 
 To build the project:
 
