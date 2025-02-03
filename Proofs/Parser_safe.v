@@ -1,5 +1,5 @@
 Require Import List.
-Require Import Lia.
+Require Import Omega.
 Require Import String.
 Require Import Wf_nat.
 Require Import Grammar.
@@ -31,7 +31,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
       -> nullable_path g la (NT y) (NT z)
       -> nullable_path g la (NT x) (NT z).
 
-  Hint Constructors nullable_path : core.
+  Hint Constructors nullable_path.
 
   Definition left_recursive g sym la :=
     nullable_path g la sym sym.
@@ -44,7 +44,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
       -> sized_first_sym g la s n
       -> sized_first_sym g la (NT x) (S n).
 
-  Hint Constructors sized_first_sym : core.
+  Hint Constructors sized_first_sym.
 
   Lemma first_sym_exists_size :
     forall g la sym,
@@ -121,7 +121,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
            -> sized_nullable_gamma g ss n'
            -> sized_nullable_gamma g (s :: ss) (n + n').
   
-  Hint Constructors sized_nullable_sym sized_nullable_gamma : core.
+  Hint Constructors sized_nullable_sym sized_nullable_gamma.
 
   Scheme sized_ns_mutual_ind := Induction for sized_nullable_sym Sort Prop
     with sized_ng_mutual_ind := Induction for sized_nullable_gamma Sort Prop.
@@ -267,7 +267,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
         apply sized_ng_ex in H4.
         destruct H4.
         exists x; exists (x + x0); repeat split; auto.
-        lia.
+        omega.
       + apply IHgamma in H; auto.
         destruct H as [n [n' [Hs [Hs' Hle]]]].
         apply sized_ns_ex in H3.
@@ -275,7 +275,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
         exists n.
         exists (x + n').
         repeat split; auto.
-        lia.
+        omega.
   Qed.
 
   Lemma sized_ns_np :
@@ -295,7 +295,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
       exists n.
       repeat split; auto.
       + econstructor; eauto.
-      + lia.
+      + omega.
     - apply in_app_cons.
   Qed.
 
@@ -335,7 +335,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
         * destruct Hi as [nx [ny' [Hsx [Hsy' Hlt']]]].
           exists nx; exists nz; repeat (split; eauto).
           eapply sized_nullable_sym_det in Hsy'; eauto.
-          lia.
+          omega.
         * eapply nullable_middle_sym; eauto.
   Qed.
 
@@ -366,12 +366,12 @@ Module ParserSafetyFn (Import G : Grammar.T).
       eapply sized_first_sym_np in Hf; eauto.
       destruct Hf as [n [n' [Hf [Hf' Hlt]]]].
       eapply sized_first_sym_det in Hf; eauto.
-      lia.
+      omega.
     - assert (Hns : nullable_sym g (NT x)) by eauto.
       eapply exist_decreasing_nullable_sym_sizes_in_null_path in Hns; eauto.
       destruct Hns as [n [n' [Hs [Hs' Hlt]]]].
       eapply sized_nullable_sym_det in Hs; eauto.
-      lia.
+      omega.
   Qed.
 
   Lemma nullable_path_ex_nt:
@@ -418,14 +418,14 @@ Module ParserSafetyFn (Import G : Grammar.T).
       + invh; auto.
       + step_eq Hp; dms; tc.
         * step_eq Hpf'; dms; tc; invh.
-          left; dlle; lia.
+          left; dlle; omega.
         * step_eq Hpf'; dms; tc; invh.
-          dlle; try (left; lia).
+          dlle; try (left; omega).
           eapply IHsz with (sa := F_arg s)
                            (m  := sa_size (F_arg s)) in Hp;
-            try (simpl; lia).
+            try (simpl; omega).
           eapply IHsz with (sa := G_arg l) in Hpf'; eauto.
-          destruct Hp; destruct Hpf'; try lia; eauto.
+          destruct Hp; destruct Hpf'; try omega; eauto.
   Qed.
 
   Lemma input_length_eq_nullable_sym :
@@ -443,7 +443,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
   Proof.
     intros g tbl s ts vis a v Hle Htbl Hp.
     eapply input_length_lt_or_nullable_sym with (sa := F_arg s) in Hp; eauto.
-    destruct Hp; try lia; auto.
+    destruct Hp; try omega; auto.
   Qed.
 
     Lemma error_conditions :
@@ -509,7 +509,7 @@ Module ParserSafetyFn (Import G : Grammar.T).
       step_eq Hp.
       + invh.
         eapply IHsz with (sa := F_arg s) (m := sa_size (F_arg s)) in Hp;
-          try (simpl; lia); eauto.
+          try (simpl; omega); eauto.
         destruct Hp as [Hin | Hex]; auto.
         left; exists nil; exists s; exists l; split; auto.
       + dms; step_eq Hpf'; dms; tc; invh.
