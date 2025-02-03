@@ -1,6 +1,5 @@
 Require Import List.
-Require Import Lia.
-Require Import Wf_nat.
+Require Import Omega.
 Require Import String.
 Require Import Grammar.
 Require Import Lemmas.
@@ -110,7 +109,7 @@ Module ParserSoundnessFn (Import G : Grammar.T).
         * (* input length reduced *)
           step_eq Hpf'; dms; tc; invh.
           eapply IHsz with (m := sa_size (F_arg s)) (sa := F_arg s) in Hp;
-            try (simpl; lia).
+            try (simpl; omega).
           eapply IHl with (sa := G_arg l) in Hpf'; eauto.
           destruct Hp as [wpre [Happ Hs]]; subst.
           destruct Hpf' as [wsuf [Happ Hg]]; subst.
@@ -119,7 +118,7 @@ Module ParserSoundnessFn (Import G : Grammar.T).
         * (* input length unchanged *)
           step_eq Hpf'; dms; tc; invh.
           apply IHsz with (sa := F_arg s) (m := sa_size (F_arg s)) in Hp;
-            try (simpl; lia).
+            try (simpl; omega).
           eapply IHsz with (sa := G_arg l) in Hpf'; eauto.
           destruct Hp as [wpre [Happ Hs]].
           apply l_ident_eq_nil in Happ; subst.

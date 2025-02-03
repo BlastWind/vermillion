@@ -7,10 +7,10 @@ Open Scope string_scope.
 Module Type SYMBOL_TYPES.
   Parameters terminal nonterminal : Type.
   
-  Parameter t_eq_dec : forall a a' : terminal,
+  Hypothesis t_eq_dec : forall a a' : terminal,
       {a = a'} + {a <> a'}.
   
-  Parameter nt_eq_dec : forall x x' : nonterminal,
+  Hypothesis nt_eq_dec : forall x x' : nonterminal,
       {x = x'} + {x <> x'}.
 
   Parameter showT  : terminal    -> string.
@@ -30,7 +30,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
     | T  : terminal -> symbol
     | NT : nonterminal -> symbol.
     
-    Hint Resolve Ty.t_eq_dec Ty.nt_eq_dec : core.
+    Hint Resolve Ty.t_eq_dec Ty.nt_eq_dec.
     
     Lemma symbol_eq_dec : forall s s' : symbol,
         {s = s'} + {s <> s'}.
@@ -141,7 +141,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
              -> nullable_gamma g tl
              -> nullable_gamma g (hd :: tl).
     
-    Hint Constructors nullable_sym nullable_gamma : core.
+    Hint Constructors nullable_sym nullable_gamma.
     
     Scheme nullable_sym_mutual_ind := Induction for nullable_sym Sort Prop
       with nullable_gamma_mutual_ind := Induction for nullable_gamma Sort Prop.
@@ -160,7 +160,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
         -> first_sym g la s
         -> first_sym g la (NT x).
     
-    Hint Constructors first_sym : core.
+    Hint Constructors first_sym.
 
     Inductive first_gamma (g : grammar) : lookahead -> list symbol -> Prop :=
     (* Given that `a` is in FIRST(nt), `a` is also the first token of any list of symbols
@@ -171,7 +171,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
         -> first_sym g la s
         -> first_gamma g la (gpre ++ s :: gsuf).
     
-    Hint Constructors first_gamma : core.
+    Hint Constructors first_gamma.
 
     Inductive follow_sym (g : grammar) : lookahead -> symbol -> Prop :=
     (* Base case: `EOF` follows the starting symbol *)
@@ -191,7 +191,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
         -> follow_sym g la (NT x1)
         -> follow_sym g la (NT x2).
 
-    Hint Constructors follow_sym : core.
+    Hint Constructors follow_sym.
 
     (* "la is a lookahead token for production X -> gamma" if
     1) We can inductively build `la` as the first symbol of the gamma
@@ -335,7 +335,7 @@ Module DefsFn (Import Ty : SYMBOL_TYPES).
              -> gamma_derives_prefix g ss wsuf vs r
              -> gamma_derives_prefix g (s :: ss) (wpre ++ wsuf) (v, vs) r.
     
-    Hint Constructors sym_derives_prefix gamma_derives_prefix : core.
+    Hint Constructors sym_derives_prefix gamma_derives_prefix.
     
     Scheme sdp_mutual_ind := Induction for sym_derives_prefix Sort Prop
       with gdp_mutual_ind := Induction for gamma_derives_prefix Sort Prop.
